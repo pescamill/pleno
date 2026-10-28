@@ -22,7 +22,7 @@ con la fuente oficial de cada resultado.
 Lo que NO hace: no decide qué es verdad (muestra el registro), no tiene todo (el Senado bloquea robots) y puede
 fallar: siempre abre la fuente antes de publicar.
 
-Link en la bio → github.com/pescamill/pleno
+Link en la bio → pescamill.github.io/pleno
 
 #México #DatosAbiertos #Periodismo #FactCheck #Transparencia #CódigoAbierto #Python
 
@@ -35,7 +35,8 @@ irm https://raw.githubusercontent.com/pescamill/pleno/main/instalar.ps1 | iex
 
 ### Antes de publicar
 
-1. Pon `https://github.com/pescamill/pleno` en tu bio.
+1. Pon `https://pescamill.github.io/pleno/` en tu bio (la página de presentación; el código sigue en
+   github.com/pescamill/pleno).
 2. Si alguien comenta un error, agradécelo y corrígelo en público: es parte del valor del proyecto.
 
 ## Reel anterior (demo en línea)

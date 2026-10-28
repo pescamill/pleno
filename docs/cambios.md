@@ -4,6 +4,24 @@ Registro de cada iteración de Pleno: lo nuevo y casos de uso concretos. Se actu
 
 ---
 
+## Iteración 11 · Página de presentación (28 oct 2026)
+
+**Qué se añadió**
+- **Página pública** en GitHub Pages: https://pescamill.github.io/pleno/ (carpeta `sitio/`). Carga rápido en el
+  celular y es el enlace para la bio.
+- Contenido: el reel, cifras reales de la base, tres capturas reales (buscar, verificar votos, contrastar con
+  cifras del SESNSP), la línea de instalación según el sistema de quien visita (Mac, Windows o Linux) con botón de
+  copiar, alcances y límites, fuentes y «Hecho por Pablo Escamilla».
+- Se publica sola con cada push que cambie `sitio/` (`.github/workflows/sitio.yml`). Modo oscuro y sin scroll
+  horizontal en celular.
+
+**Casos de uso**
+- Alguien llega desde Instagram, entiende qué es Pleno en 30 segundos y copia la línea correcta para su
+  computadora sin pasar por GitHub.
+- Compartir un solo enlace (con vista previa) en LinkedIn, WhatsApp o un CV.
+
+---
+
 ## Iteración 10 · Instalación local y código abierto (28 oct 2026)
 
 **Qué se añadió**

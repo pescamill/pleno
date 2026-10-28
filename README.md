@@ -8,6 +8,8 @@ Es gratis, de código abierto y **vive en tu computadora**: los datos se descarg
 
 ## Instalar (5 minutos)
 
+Presentación con capturas y video: https://pescamill.github.io/pleno/
+
 **Mac** — abre la app **Terminal**, pega esta línea y presiona Enter:
 
 ```bash

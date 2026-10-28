@@ -4,3 +4,4 @@ data/
 promo/fotos/
 *.mp4
 .DS_Store
+!sitio/reel.mp4
