@@ -4,6 +4,28 @@ Registro de cada iteración de Pleno: lo nuevo y casos de uso concretos. Se actu
 
 ---
 
+## Iteración 9 · En línea (28 oct 2026)
+
+**Qué se añadió**
+- **Demo pública en Render (gratis)**: https://pleno-x7dq.onrender.com, desplegada desde el repositorio privado
+  `pescamill/pleno`; cada commit a `main` se publica solo. La base vive en el dataset público de Hugging Face
+  `pescamil/pleno-datos` y se descarga en cada arranque.
+- **Página «Pleno está despertando»** mientras se descarga la base (el plan gratis se duerme tras 15 min).
+- **Mucho más rápido**: el intérprete de preguntas ya no compila un patrón por cada ley (verificar pasó de ~25 s a
+  ~2 s en el servidor gratis); la portada se calcula una vez al arrancar y queda en memoria.
+- Formulario de verificar corregido en celular.
+
+**Casos de uso**
+- Mandar el enlace a un periodista y que lo pruebe sin instalar nada.
+- Poner el enlace en la bio del reel.
+
+**Límites del plan gratis**
+- Si nadie entra en 15 minutos se duerme; despertar tarda 1–2 minutos.
+- 0.1 CPU: una búsqueda tarda unos segundos; con tráfico real convendría un plan pagado o un VPS.
+- La base no se actualiza sola en línea: se sube de nuevo cuando quieras publicar datos nuevos.
+
+---
+
 ## Iteración 8 · Listo para redes y para publicar (27 oct 2026)
 
 **Qué se añadió**

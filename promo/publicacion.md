@@ -25,10 +25,10 @@ fiscalías, 18 congresos estatales y cifras del SESNSP).
 Pegas «X votó a favor de Y» o «bajaron los homicidios» y te muestra el registro oficial: la votación nominal, la cita
 exacta o la cifra, con su fuente. No dice si algo es verdad; dice qué muestra el registro.
 
-Pruébalo: <enlace del Space>
+Pruébalo: https://pleno-x7dq.onrender.com
 
 ## Antes de publicar
 
-1. Abre el Space y prueba los ejemplos del reel (búsqueda del agua, voto de la reforma judicial, homicidios 2025).
-2. Pon el enlace del Space en tu bio.
+1. Abre https://pleno-x7dq.onrender.com y prueba los ejemplos del reel (búsqueda del agua, voto de la reforma judicial, homicidios 2025).
+2. Pon https://pleno-x7dq.onrender.com en tu bio. Es una demo gratuita: si nadie la usó en 15 min, tarda ~1–2 min en despertar (muestra «Pleno está despertando»). Ábrela tú un minuto antes de publicar.
 3. Fija un comentario con los límites (no decide qué es verdad; puede fallar; revisa la fuente).
