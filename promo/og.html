@@ -1,0 +1,20 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,500;1,6..72,400&display=block">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1200px;height:630px;background:#141110;color:#f3ede6;font-family:Inter,sans-serif;display:grid;grid-template-columns:1fr 360px;overflow:hidden}
+.l{padding:70px 0 60px 80px;display:flex;flex-direction:column;justify-content:space-between}
+.k{font:700 22px/1 Inter;letter-spacing:.14em;color:#ff7a9c;text-transform:uppercase}
+h1{font:500 92px/1.02 Newsreader,serif;letter-spacing:-.025em}
+h1 em{font-style:normal;color:#1b1714;background:#ffe39a;border-radius:10px;padding:0 12px;margin-left:-12px}
+p{font:500 26px/1.4 Inter;color:#a2978d;max-width:640px}
+.r{background:#8c1d40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.r b{font:500 96px/1 Newsreader,serif;color:#fff;letter-spacing:-.03em}
+svg{width:200px;height:115px}
+</style></head><body>
+<div class="l"><span class="k">Datos públicos de México</span>
+<h1>¿Lo dijo? ¿Lo votó?<br><em>¿Es cierto?</em></h1>
+<p>Mañaneras, Cámara de Diputados, Corte, fiscalías, congresos y cifras oficiales. Cada resultado con su fuente.</p></div>
+<div class="r"><svg viewBox="0 0 42 24" id="s"></svg><b>Pleno</b></div>
+<script>let h="";[[7,5],[10.5,7],[14,9]].forEach(([r,n])=>{for(let i=0;i<n;i++){const a=Math.PI-Math.PI*i/(n-1);h+=`<circle cx="${21+r*Math.cos(a)}" cy="${21-r*Math.sin(a)}" r="1.45" fill="#fff"/>`}});document.getElementById("s").innerHTML=h;</script>
+</body></html>

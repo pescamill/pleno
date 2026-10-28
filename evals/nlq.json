@@ -1,0 +1,18 @@
+[
+  {"pregunta": "¿Qué dijo Sheinbaum sobre el agua en 2025?", "espera": {"personas": ["claudia-sheinbaum-pardo"], "desde": "2025-01-01", "hasta": "2025-12-31", "texto": "agua"}},
+  {"pregunta": "¿Qué dijo la presidenta sobre el agua en 2025?", "espera": {"cargos": ["presidencia de mexico"], "desde": "2025-01-01", "texto": "agua"}},
+  {"pregunta": "diputados de Movimiento Ciudadano y la Ley de Amparo", "espera": {"instituciones": ["diputados"], "partidos": ["MC"], "leyes": ["ley-de-amparo"]}},
+  {"pregunta": "diputados de Oaxaca que hablan del agua", "espera": {"instituciones": [], "estados": ["Oaxaca"], "texto": "agua"}},
+  {"pregunta": "¿Qué dijo la presidenta sobre Jalisco?", "espera": {"cargos": ["presidencia de mexico"], "estados": [], "texto": "jalisco"}},
+  {"pregunta": "¿Qué ha dicho la Corte sobre el amparo?", "espera": {"instituciones": ["scjn"], "texto": "amparo"}},
+  {"pregunta": "Kenia López Rabadán sobre la reforma judicial", "espera": {"personas": ["kenia-lopez-rabadan"], "texto": "reforma judicial"}},
+  {"pregunta": "Ricardo Monreal y la Guardia Nacional", "espera": {"personas": ["ricardo-monreal-avila"], "texto": "guardia nacional"}},
+  {"pregunta": "Congreso de la Ciudad de México sobre vivienda", "espera": {"estados": ["Ciudad de México"], "texto": "vivienda"}},
+  {"pregunta": "diputados del PAN sobre seguridad en 2026", "espera": {"instituciones": ["diputados"], "partidos": ["PAN"], "desde": "2026-01-01", "texto": "seguridad"}},
+  {"pregunta": "comunicados de la Fiscalía sobre huachicol", "espera": {"instituciones": ["fgr"], "texto": "comunicados huachicol"}},
+  {"pregunta": "Omar García Harfuch sobre extorsión", "espera": {"personas": ["omar-garcia-harfuch"], "texto": "extorsion"}},
+  {"pregunta": "congresos de Guerrero y Tabasco sobre presupuesto", "espera": {"estados": ["Guerrero", "Tabasco"], "texto": "presupuesto"}},
+  {"pregunta": "¿Quién habla del Infonavit?", "espera": {"texto": "infonavit"}},
+  {"pregunta": "Ley General de Salud en la Cámara de Diputados", "espera": {"instituciones": ["diputados"], "leyes": ["ley-general-de-salud"]}},
+  {"pregunta": "lo que dijo López Obrador sobre el litio en 2022", "espera": {"personas": ["andres-manuel-lopez-obrador"], "desde": "2022-01-01", "hasta": "2022-12-31", "texto": "litio"}}
+]

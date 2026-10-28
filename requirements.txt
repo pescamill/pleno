@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+certifi
+pytest
+httpx2
+pdfminer.six
+pyarrow

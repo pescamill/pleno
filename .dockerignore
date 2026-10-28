@@ -1,0 +1,6 @@
+.venv
+data
+promo
+tests
+docs
+**/__pycache__

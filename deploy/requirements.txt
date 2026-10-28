@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+certifi
+pdfminer.six
+huggingface_hub

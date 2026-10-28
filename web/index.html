@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pleno · Lo que se dice en el poder público</title>
+  <meta name="description" content="Conferencias y sesiones legislativas de México, estructuradas y buscables: quién dijo qué, con qué cargo, de qué partido y sobre qué ley. Cada resultado enlaza a su fuente oficial.">
+  <meta name="theme-color" content="#8c1d40">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Pleno · ¿Lo dijo? ¿Lo votó? ¿Es cierto?">
+  <meta property="og:description" content="Mañaneras, Cámara de Diputados, Suprema Corte, fiscalías, congresos estatales y cifras oficiales de delitos, buscables y cotejables. Cada resultado enlaza a su fuente oficial.">
+  <meta property="og:image" content="{{URL}}/static/og.png">
+  <meta property="og:url" content="{{URL}}/">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap">
+  <link rel="stylesheet" href="/static/style.css?v=15">
+  <script>
+    try { const t = localStorage.getItem("pleno-tema"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+</head>
+<body data-page="inicio">
+  <a class="skip" href="#view">Saltar al contenido</a>
+  <header class="top">
+    <div class="wrap top-inner">
+      <a class="brand" href="#/" aria-label="Pleno, inicio">
+        <span class="logo-mark" aria-hidden="true"></span>
+        <span class="logo-word">Pleno</span>
+      </a>
+      <form class="search top-search" id="top-search" role="search" autocomplete="off">
+        <span class="search-ic" aria-hidden="true"></span>
+        <input type="search" name="q" aria-label="Pregunta o busca" placeholder="Pregunta o busca una persona, ley o tema…">
+        <kbd class="kbd" aria-hidden="true">/</kbd>
+        <div class="suggest" role="listbox" hidden></div>
+      </form>
+      <nav class="top-nav">
+        <a href="#/" class="nav-link">Explorar</a>
+        <a href="#/verificar" class="nav-link">Verificar</a>
+        <a href="#/votaciones" class="nav-link">Votaciones</a>
+        <a href="#/fuentes" class="nav-link">Fuentes</a>
+        <a href="#/alertas" class="nav-link only-local">Alertas</a>
+        <a href="/docs" class="nav-link" target="_blank" rel="noopener">API</a>
+        <button class="icon-btn" id="theme" type="button" aria-label="Cambiar tema claro u oscuro"></button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="view" tabindex="-1"></main>
+
+  <footer class="foot">
+    <div class="wrap foot-inner">
+      <div>
+        <a class="brand small" href="#/"><span class="logo-mark" aria-hidden="true"></span><span class="logo-word">Pleno</span></a>
+        <p>Lo que se dice en el poder público, estructurado. Proyecto independiente: no representa a ninguna institución.</p>
+      </div>
+      <div>
+        <h4>Fuentes</h4>
+        <p>Versiones estenográficas y diarios de los debates oficiales: Presidencia (vía
+          <a href="https://huggingface.co/datasets/feregrino/mananeras" target="_blank" rel="noopener">feregrino/mananeras</a>, CC BY-SA 4.0),
+          Cámara de Diputados, Suprema Corte, Fiscalía General de la República y congresos estatales. <a href="#/fuentes">Inventario completo</a>.
+          Cada resultado enlaza a su fuente; verifica ahí antes de citar.</p>
+      </div>
+      <div>
+        <h4>Para equipos</h4>
+        <p><a href="/docs" target="_blank" rel="noopener">API v1</a> con plan gratuito, exportación a CSV y llaves por cliente.</p>
+      </div>
+    </div>
+  </footer>
+
+  <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script src="/static/app.js?v=15"></script>
+</body>
+</html>
