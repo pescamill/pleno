@@ -27,7 +27,9 @@ def fetch():
         if not os.path.exists(TARGET):
             from huggingface_hub import hf_hub_download
             print(f"Descargando la base desde {REPO}…", flush=True)
-            shutil.copy(hf_hub_download(REPO, "pleno.db", repo_type="dataset"), TARGET)
+            # copyfile, not copy: the Hugging Face cache is read-only, and SQLite must write (WAL) to open the base.
+            shutil.copyfile(hf_hub_download(REPO, "pleno.db", repo_type="dataset"), TARGET)
+            os.chmod(TARGET, 0o644)
         print("Base lista.", flush=True)
         ready.set()
     except Exception:
