@@ -1,8 +1,50 @@
-# Pleno · Lo que se dice en el poder público, estructurado
+# Pleno · ¿Lo dijo? ¿Lo votó? ¿Es cierto?
 
-Pleno convierte las versiones estenográficas de actos públicos de México en datos con estructura:
-**quién habló, con qué cargo, de qué partido, en qué institución, cuándo, qué ley mencionó**. Todo se puede consultar
-en español o con filtros exactos, y cada resultado enlaza a su fuente oficial.
+Pleno junta lo que se dice en el poder público de México (conferencias matutinas, Cámara de Diputados, Suprema Corte,
+Fiscalía General, fiscalías y congresos estatales, cifras oficiales de delitos) y lo vuelve **buscable y cotejable**:
+quién habló, con qué cargo, de qué partido, sobre qué ley, cómo votó. Cada resultado enlaza a su fuente oficial.
+
+Es gratis, de código abierto y **vive en tu computadora**: los datos se descargan ahí, no en un servidor ajeno.
+
+## Instalar (5 minutos)
+
+**Mac** — abre la app **Terminal**, pega esta línea y presiona Enter:
+
+```bash
+curl -LsSf https://raw.githubusercontent.com/pescamill/pleno/main/instalar.sh | sh
+```
+
+**Windows** — abre **PowerShell** (búscalo en el menú Inicio), pega esta línea y presiona Enter:
+
+```powershell
+irm https://raw.githubusercontent.com/pescamill/pleno/main/instalar.ps1 | iex
+```
+
+Linux: la misma línea que en Mac.
+
+Qué pasa después:
+1. Se instala todo lo necesario (incluido Python, sin tocar el que ya tengas) en la carpeta `Pleno` de tu usuario.
+2. Aparece **Pleno** en tu Escritorio y se abre en tu navegador.
+3. La primera vez te pregunta **cómo traer los datos**:
+   - **Rápido** (recomendado): la base ya armada, ≈2 GB, en minutos.
+   - **Desde las fuentes oficiales**: tu computadora descarga y procesa cada sitio oficial; tarda horas y puedes usar
+     Pleno mientras avanza.
+4. Si lo eliges, **se actualiza cada día a las 7:00** con lo nuevo de las fuentes oficiales.
+
+Para abrirlo otra vez: doble clic en **Pleno** en tu Escritorio. Para apagarlo: cierra la ventana negra que se abre
+junto. Para actualizar Pleno a la versión más nueva: vuelve a pegar la misma línea (tus datos se conservan).
+
+### Qué hace y qué no
+
+- **Buscar** en español: «¿Qué dijo la presidenta sobre el agua en 2025?».
+- **Verificar** una afirmación: votos contra la votación nominal, citas contra el texto exacto, cifras de delitos
+  contra el SESNSP. Te muestra la evidencia y la fuente.
+- **Votaciones**: cómo votó cada diputado y quién votó distinto a su bancada.
+- **Alertas** con RSS, **exportar** a CSV y una **API** local.
+
+Límites: Pleno **no decide qué es verdad**; muestra lo que dice el registro oficial. **No está todo**: el Senado y
+algunos congresos prohíben robots y se piden por transparencia. **Es automático y puede fallar**: antes de publicar,
+abre la fuente oficial.
 
 ## Qué hay hoy
 
@@ -74,16 +116,17 @@ Cada corrida queda en la tabla `runs`; una fuente que falla se registra y no det
 («Crear alerta» en la búsqueda) generan un RSS por alerta (`/api/v1/alertas/<id>.rss`) y un resumen diario en
 `data/alertas/resumen-AAAA-MM-DD.md`, con notificación de macOS si hay coincidencias.
 
-## Correrlo
+## Desarrollo
 
 ```bash
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+uv sync --extra dev                          # o: python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m pleno ingerir            # descarga y carga (Diputados ~15 min la primera vez; luego incremental)
 .venv/bin/python -m pleno servir             # http://127.0.0.1:8780  ·  documentación de la API en /docs
 .venv/bin/python -m pytest
 ```
 
-Las mañaneras se leen de `../neta/data/raw/mananeras` (o de `PLENO_MANANERAS_DIR`).
+Las mañaneras se leen de `data/mananeras` (se descargan de Hugging Face), de `../neta/data/raw/mananeras` si existe,
+o de `PLENO_MANANERAS_DIR`. `pleno abrir` es lo que corre el acceso directo: elige un puerto libre y abre el navegador.
 
 ## Interfaz
 

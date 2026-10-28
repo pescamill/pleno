@@ -29,6 +29,7 @@ def main(argv=None):
     p.add_argument("--sin-modelo", action="store_true")
     p = sub.add_parser("dataset", help="snapshot versionado en Parquet para venta o entrenamiento (data/dataset/)")
     p.add_argument("--version", help="etiqueta del snapshot (por defecto, la fecha de hoy)")
+    sub.add_parser("abrir", help="abre Pleno en tu navegador (y te guía la primera vez)")
     p = sub.add_parser("servir", help="API + interfaz en http://127.0.0.1:8780")
     p.add_argument("--puerto", type=int, default=8780)
     args = parser.parse_args(argv)
@@ -92,10 +93,38 @@ def main(argv=None):
         for f in fuentes.registry(db.connect()):
             cov = f["cobertura"] or {}
             print(f"{f['estatus']:<13} {f['nombre']:<58} {cov.get('documentos') or '':>6} {cov.get('desde') or ''}–{cov.get('hasta') or ''}")
+    elif args.cmd == "abrir":
+        abrir()
     elif args.cmd == "servir":
         import uvicorn
         uvicorn.run("pleno.api:app", host="127.0.0.1", port=args.puerto)
     return 0
+
+
+def abrir():
+    """What the desktop shortcut runs: start Pleno on this computer and open it in the browser."""
+    import socket
+    import threading
+    import time
+    import webbrowser
+
+    import uvicorn
+
+    from pleno import db, instalador
+
+    instalador.cleanup()
+    port = 8780
+    for candidate in range(8780, 8800):
+        with socket.socket() as s:
+            if s.connect_ex(("127.0.0.1", candidate)) != 0:
+                port = candidate
+                break
+    first = instalador.needed(db.connect())
+    url = f"http://127.0.0.1:{port}/" + ("#/instalar" if first else "")
+    print("\n  Pleno está abierto en tu navegador:", url)
+    print("  Deja esta ventana abierta mientras lo usas; ciérrala para apagar Pleno.\n")
+    threading.Thread(target=lambda: (time.sleep(1.5), webbrowser.open(url)), daemon=True).start()
+    uvicorn.run("pleno.api:app", host="127.0.0.1", port=port, log_level="warning")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,19 @@
+[project]
+name = "pleno"
+version = "0.1.0"
+description = "Lo que se dice en el poder público de México, estructurado y cotejable con su fuente oficial."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "certifi",
+    "pdfminer.six",
+    "huggingface_hub",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx", "pyarrow", "playwright"]
+
+[tool.uv]
+package = false

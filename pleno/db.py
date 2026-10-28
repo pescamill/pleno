@@ -9,7 +9,21 @@ import sqlite3
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DB_FILE = Path(os.environ.get("PLENO_DB", ROOT / "data" / "pleno.db"))
+POINTER = ROOT / "data" / "actual.txt"   # name of the database in use, written by the installer
+
+
+def current_file():
+    """The database in use. The installer downloads a new file and points to it instead of overwriting the
+    open one (Windows cannot replace a file that is open)."""
+    if POINTER.exists():
+        candidate = ROOT / "data" / POINTER.read_text(encoding="utf-8").strip()
+        if candidate.exists():
+            return candidate
+    return ROOT / "data" / "pleno.db"
+
+
+DB_FILE = Path(os.environ["PLENO_DB"]) if os.environ.get("PLENO_DB") else current_file()
+GENERATION = 0   # bumped when DB_FILE changes, so open connections reconnect
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS institutions (

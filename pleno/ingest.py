@@ -421,8 +421,25 @@ def relink_laws(con, catalog):
     return con.execute("SELECT COUNT(*) FROM laws").fetchone()[0]
 
 
+def resume_dates(con, margin_days=14):
+    """Per source, the date to resume from: its newest document minus a margin (late corrections). A source
+    with nothing loaded gets no date, so it starts from its own default."""
+    import datetime as dt
+    out = {}
+    for name, source in SOURCES.items():
+        last = con.execute("SELECT MAX(date) FROM documents WHERE institution_id = ?",
+                           (source.INSTITUTIONS[0]["id"],)).fetchone()[0]
+        if last:
+            out[name] = (dt.date.fromisoformat(last) - dt.timedelta(days=margin_days)).isoformat()
+    last = con.execute("SELECT MAX(date) FROM votes").fetchone()[0]
+    if last:
+        out["sitl"] = (dt.date.fromisoformat(last) - dt.timedelta(days=margin_days)).isoformat()
+    return out
+
+
 def run(names=None, since=None, limit=None, con=None):
-    """Ingest sources (all by default). One failing source is logged and skipped, never fatal."""
+    """Ingest sources (all by default). One failing source is logged and skipped, never fatal.
+    `since` is one date for all sources or a {source: date} map."""
     con = con or db.connect()
     names = names or [*SOURCES, *EXTRA]
     try:
@@ -435,19 +452,20 @@ def run(names=None, since=None, limit=None, con=None):
     for name in names:
         run_id = _log_start(con, name)
         started, loaded, seen = time.time(), 0, 0
+        src_since = since.get(name) if isinstance(since, dict) else since
         try:
             if name == "sesnsp":
                 seen = loaded = load_crime_stats(con, sesnsp.records())
             elif name == "sitl":
                 upsert_institutions(con, diputados)
                 load_roster(con, sitl.roster())
-                seen, loaded = load_votes(con, sitl.votes(since=since))
+                seen, loaded = load_votes(con, sitl.votes(since=src_since))
             else:
                 source = SOURCES[name]
                 upsert_institutions(con, source)
                 inst = source.INSTITUTIONS[0]
                 chamber = inst["id"]
-                for doc in source.documents(since=since) if since else source.documents():
+                for doc in source.documents(since=src_since) if src_since else source.documents():
                     seen += 1
                     loaded += load_document(con, doc, chamber, laws, (inst["level"], inst["state"]))
                     if seen % 100 == 0:

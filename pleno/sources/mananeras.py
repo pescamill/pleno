@@ -9,7 +9,10 @@ from pleno.sources.base import ROOT, Document, Turn
 
 NAME = "mananeras"
 DATASET = "https://huggingface.co/datasets/feregrino/mananeras"
-CORPUS_DIR = Path(os.environ.get("PLENO_MANANERAS_DIR", ROOT.parent / "neta" / "data" / "raw" / "mananeras"))
+_AUTHOR_CLONE = ROOT.parent / "neta" / "data" / "raw" / "mananeras"
+CORPUS_DIR = Path(os.environ.get("PLENO_MANANERAS_DIR")
+                  or (_AUTHOR_CLONE if _AUTHOR_CLONE.exists() else ROOT / "data" / "mananeras"))
+REPO_ID = "feregrino/mananeras"
 INSTITUTIONS = [
     {"id": "presidencia", "name": "Presidencia de la República", "level": "federal", "state": None, "kind": "ejecutivo"},
 ]

@@ -1328,6 +1328,80 @@ async function renderAlerts(view, token) {
   });
 }
 
+/* ---------- first run on someone's computer ---------- */
+
+const fmtBytes = n => n >= 1e9 ? `${(n / 1e9).toFixed(2)} GB` : `${Math.round(n / 1e6)} MB`;
+
+async function renderInstall(view, token) {
+  document.title = "Bienvenido · Pleno";
+  let info;
+  try { info = await call("/instalacion"); } catch (e) { if (token === routeSeq) view.innerHTML = `<div class="wrap page">${errorBox(e)}</div>`; return; }
+  if (token !== routeSeq) return;
+  const running = info.estado.activo || info.estado.terminado || info.estado.error;
+  view.innerHTML = `<div class="wrap page install">
+    <header class="page-head"><p class="eyebrow">${icon("spark")}Bienvenido</p><h1>Vamos a traer los datos</h1>
+      <p class="lede-sm">Pleno vive en tu computadora. Elige cómo conseguir los datos públicos; puedes cambiar de opinión después.</p></header>
+    <div id="install-body">${running ? "" : installChoices(info)}</div>
+  </div>`;
+  if (running) return installProgress(token);
+  $$(".choice input[name=modo]").forEach(r => r.onchange = () => {
+    $("#src-list").hidden = $("input[name=modo]:checked").value !== "fuentes";
+  });
+  $("#install-form").onsubmit = async e => {
+    e.preventDefault();
+    const modo = $("input[name=modo]:checked").value;
+    const fuentes = $$("#src-list input:checked").map(i => i.value);
+    const btn = $("#install-go");
+    btn.disabled = true; btn.textContent = "Empezando…";
+    try {
+      const r = await call("/instalacion", { modo, fuentes, diario: $("#daily").checked });
+      if (r.diario) state.installNote = r.diario;
+      installProgress(token);
+    } catch (err) { btn.disabled = false; btn.textContent = "Empezar"; $("#install-body").insertAdjacentHTML("beforeend", errorBox(err, false)); }
+  };
+}
+
+function installChoices(info) {
+  return `<form id="install-form" class="install-form">
+    <label class="choice panel"><input type="radio" name="modo" value="rapido" checked>
+      <span><b>Rápido <em class="pill-rec">recomendado</em></b>
+      <span class="muted">Descarga la base ya armada (≈2 GB) desde Hugging Face. Tarda unos minutos, según tu internet. Después, cada día, Pleno trae lo nuevo directo de las fuentes oficiales.</span></span></label>
+    <label class="choice panel"><input type="radio" name="modo" value="fuentes">
+      <span><b>Desde las fuentes oficiales</b>
+      <span class="muted">Tu computadora descarga y procesa cada fuente desde los sitios oficiales. Tarda horas; puedes usar Pleno mientras avanza.</span></span></label>
+    <div id="src-list" class="panel src-list" hidden>
+      ${info.fuentes.map(f => `<label><input type="checkbox" value="${esc(f.id)}" ${f.pre ? "checked" : ""}> <span>${esc(f.nombre)}</span> <span class="muted">${esc(f.tiempo)}</span></label>`).join("")}
+    </div>
+    <label class="daily"><input type="checkbox" id="daily" checked> Actualizar cada día a las 7:00 con lo nuevo de las fuentes oficiales</label>
+    <p class="note">Respetamos las reglas de cada sitio (robots.txt) y descargamos despacio para no saturarlos. Los datos se quedan en tu computadora.</p>
+    <button class="btn primary big-btn" id="install-go" type="submit">Empezar</button>
+  </form>`;
+}
+
+async function installProgress(token) {
+  const body = $("#install-body");
+  const tick = async () => {
+    if (token !== routeSeq) return;
+    let info;
+    try { info = await call("/instalacion"); } catch (e) { setTimeout(tick, 3000); return; }
+    const st = info.estado, pct = st.progreso ?? 0;
+    body.innerHTML = `<div class="panel install-progress">
+      <p class="install-stage">${esc(st.etapa || "Preparando…")}</p>
+      <div class="bar"><span style="width:${pct}%"></span></div>
+      <p class="muted">${st.total ? `${fmtBytes(st.bytes)} de ${fmtBytes(st.total)} · ` : ""}${pct ? `${pct}%` : ""}</p>
+      ${state.installNote ? `<p class="note">${esc(state.installNote)}</p>` : ""}
+      ${st.bitacora?.length ? `<pre class="install-log">${esc(st.bitacora.join("\n"))}</pre>` : ""}
+      ${st.error ? `<div class="error-box"><p><b>Algo falló:</b> ${esc(st.error)}</p><p>Revisa tu conexión y vuelve a intentarlo.</p><button class="btn ghost" id="install-retry">Volver a intentar</button></div>` : ""}
+      ${st.terminado ? `<a class="btn primary big-btn" href="#/" id="install-done">Explorar Pleno ${icon("arrow")}</a>` : ""}
+      ${st.modo === "fuentes" && !st.terminado && !st.error ? `<a class="btn ghost" href="#/">Usar Pleno mientras termina</a>` : ""}
+    </div>`;
+    if (st.terminado) { optionsPromise = null; optionsCache = null; return; }
+    if (st.error) { $("#install-retry").onclick = () => { location.hash = "#/instalar"; route(); }; return; }
+    setTimeout(tick, 1500);
+  };
+  tick();
+}
+
 /* ---------- verify a claim ---------- */
 
 const VERIFY_EXAMPLES = [
@@ -1493,6 +1567,10 @@ async function route() {
   if (!(page === "buscar" && prev === "buscar")) window.scrollTo(0, 0);
   if (page !== "buscar") $("#top-search input").value = "";
   try {
+    if (page !== "instalar") {
+      const o = await options().catch(() => null);
+      if (o?.instalacion_necesaria && token === routeSeq) { location.hash = "#/instalar"; return; }
+    }
     if (page === "buscar") await renderSearch(view, token, params);
     else if (page === "persona" && parts[1]) await renderPerson(view, token, parts[1]);
     else if (page === "ley" && parts[1]) await renderLaw(view, token, parts[1]);
@@ -1501,6 +1579,7 @@ async function route() {
     else if (page === "fuentes") await renderSources(view, token);
     else if (page === "alertas") await renderAlerts(view, token);
     else if (page === "verificar") await renderVerify(view, token, params);
+    else if (page === "instalar") await renderInstall(view, token);
     else if (page === "documento" && parts[1]) await renderDocument(view, token, parts.slice(1).join("/"), params);
     else { document.body.dataset.page = "inicio"; await renderHome(view, token); }
   } catch (e) {

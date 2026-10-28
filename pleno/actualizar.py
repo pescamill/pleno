@@ -106,7 +106,13 @@ def pull_mananeras():
     corpus = Path(mananeras.CORPUS_DIR)
     root = next((p for p in [corpus, *corpus.parents] if (p / ".git").exists()), None)
     if not root:
-        return "sin repositorio git; se usa la copia local"
+        # Installed copies have no git clone: download only what changed in the dataset.
+        try:
+            from huggingface_hub import snapshot_download
+            snapshot_download(mananeras.REPO_ID, repo_type="dataset", local_dir=corpus, allow_patterns=["*.txt"])
+            return "actualizado (Hugging Face)"
+        except Exception as e:
+            return f"no se pudo actualizar: {type(e).__name__}"
     proc = subprocess.run(["git", "-C", str(root), "pull", "--ff-only", "--quiet"], capture_output=True, text=True,
                           timeout=900)
     return "actualizado" if proc.returncode == 0 else f"git pull falló: {proc.stderr.strip()[:200]}"
@@ -118,7 +124,7 @@ def actualizar(con=None, sources=None, notify=True):
     lines = [f"# Actualización {time.strftime('%Y-%m-%d %H:%M')}", ""]
     status = pull_mananeras()
     lines.append(f"- Mañaneras (dataset): {status}")
-    summary = ingest.run(sources, con=con)
+    summary = ingest.run(sources, since=ingest.resume_dates(con), con=con)
     errors = {r["source"]: r["error"] for r in con.execute(
         "SELECT source, error FROM runs WHERE started >= ? AND error IS NOT NULL",
         (time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(started)),))}

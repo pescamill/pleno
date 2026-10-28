@@ -40,8 +40,10 @@ _lock = threading.Lock()
 
 
 def con():
-    if not hasattr(_local, "con"):
-        _local.con = db.connect()
+    if getattr(_local, "gen", None) != db.GENERATION:
+        if hasattr(_local, "con"):
+            _local.con.close()
+        _local.con, _local.gen = db.connect(), db.GENERATION
     return _local.con
 
 
@@ -96,6 +98,12 @@ class QueryIn(BaseModel):
     pagina: int = Field(1, ge=1, le=500)
 
 
+class InstallIn(BaseModel):
+    modo: str = Field(..., pattern="^(rapido|fuentes)$")
+    fuentes: list[str] = []
+    diario: bool = True
+
+
 class Claim(BaseModel):
     afirmacion: str = Field(..., min_length=8, max_length=500)
     sin_modelo: bool = False
@@ -116,6 +124,7 @@ def estado():
     count = lambda sql: c.execute(sql).fetchone()[0]
     return {
         "publico": PUBLIC,
+        "instalacion_necesaria": not PUBLIC and count("SELECT COUNT(*) FROM documents") == 0,
         "documentos": count("SELECT COUNT(*) FROM documents"),
         "intervenciones": count("SELECT COUNT(*) FROM turns"),
         "personas": count("SELECT COUNT(*) FROM people"),
@@ -236,6 +245,33 @@ def sugerir(q: str = Query_(..., min_length=2, max_length=80)):
 def responder(body: Question):
     q = Query.from_dict(body.consulta.model_dump()) if body.consulta else nlq.interpret(body.pregunta, db.DB_FILE)[0]
     return {"consulta": q.to_dict(), **rag.answer(con(), body.pregunta, q)}
+
+
+@app.get("/api/v1/instalacion", dependencies=[light])
+def instalacion():
+    """First-run state: whether data is needed, the choices, and the progress of a running install."""
+    from pleno import instalador
+    if PUBLIC:
+        raise HTTPException(403, "No disponible en la demo pública.")
+    return {"necesaria": instalador.needed(con()), "fuentes": instalador.FUENTES, "estado": instalador.status()}
+
+
+@app.post("/api/v1/instalacion", dependencies=[api])
+def instalar(body: InstallIn):
+    from pleno import instalador
+    if PUBLIC:
+        raise HTTPException(403, "No disponible en la demo pública.")
+    try:
+        instalador.start(body.modo, body.fuentes or None)
+    except RuntimeError as e:
+        raise HTTPException(409, str(e))
+    diario = None
+    if body.diario:
+        try:
+            diario = instalador.schedule_daily()
+        except Exception as e:  # the data still installs; the person can schedule later
+            diario = f"No se pudo programar la actualización diaria ({type(e).__name__})."
+    return {"ok": True, "diario": diario}
 
 
 @app.post("/api/v1/verificar", dependencies=[api])
