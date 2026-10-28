@@ -544,3 +544,67 @@ def test_crime_figures_compare_the_same_months():
     assert estadistica.crime_in("¿Bajaron los homicidios?")[1] == "Homicidio doloso"
     assert estadistica.crime_in("feminicidios en Jalisco")[1] == "Feminicidio"
     assert estadistica.crime_in("el agua en Monterrey") is None
+
+
+SITL_SUMMARY = """<a href="listados_votacionesnplxvi.php?partidot=14&votaciont=2" class="estilolinks">MORENA</a>
+<a href="listados_votacionesnplxvi.php?partidot=5&votaciont=2" class="estilolinks">PVEM</a>
+<a href="listados_votacionesnplxvi.php?partidot=2&votaciont=2" class="estilolinks">PRD</a>
+<a href="listados_votacionesnplxvi.php?partidot=7&votaciont=2" class="estilolinks"> </a>"""
+
+
+def test_vote_party_comes_from_the_vote_summary_not_the_site_id():
+    from pleno.sources import sitl
+    parties = sitl.summary_parties(SITL_SUMMARY, "2")
+    # Id 2 is not a current bench but the summary names it; an unlabelled id stays unknown instead of a number.
+    assert parties == {"14": "MORENA", "5": "PVEM", "2": "PRD", "7": None}
+
+
+def test_numeric_parties_are_repaired_and_flagged_by_the_eval(con):
+    from pleno import evaluar
+    _load_vote(con)
+    con.execute("UPDATE vote_casts SET party = '2' WHERE official_id = '1'")
+    assert evaluar.integrity(con)["votos_con_partido_desconocido"] == 1
+    assert ingest.repair_vote_parties(con) == 1
+    assert evaluar.integrity(con)["votos_con_partido_desconocido"] == 0
+    assert con.execute("SELECT party FROM vote_casts WHERE official_id = '1'").fetchone()[0] == "PRD"
+
+
+def test_unlabelled_party_falls_back_to_the_roster(con):
+    _load_vote(con)
+    ingest.load_votes(con, [{"id": "diputados:lxvi:10", "date": "2025-10-02", "title": "OTRA", "source_url": "https://sitl/v10",
+                             "A favor": 1, "En contra": 0, "Abstención": 0, "Ausente": 0, "otros": 0,
+                             "casts": [("2", "x", None, "A favor")]}])
+    assert con.execute("SELECT party FROM vote_casts WHERE vote_id = 'diputados:lxvi:10'").fetchone()[0] == "MORENA"
+
+
+def test_reported_errors_stay_fixed(con):
+    from pleno import evaluar
+    _load_vote(con)
+    case = {"id": "T1", "tipo": "partido_voto", "votacion": "diputados:lxvi:9", "persona": "ricardo-monreal-avila", "espera": "MORENA"}
+    assert evaluar.reports(con, [case])["corregidos_pct"] == 100
+    con.execute("UPDATE vote_casts SET party = 'PT' WHERE person_id = 'ricardo-monreal-avila'")
+    out = evaluar.reports(con, [case])
+    assert out["corregidos_pct"] == 0 and out["fallos"][0]["obtuvo"] == "PT"
+
+
+def test_report_cases_file_is_well_formed():
+    import json
+    from pleno import evaluar
+    cases = json.loads((evaluar.GOLD_DIR / "reportes.json").read_text(encoding="utf-8"))
+    required = {"partido_voto": {"votacion", "persona"}, "persona_intervencion": {"documento", "texto"}, "veredicto": {"afirmacion"}}
+    for c in cases:
+        assert {"id", "fecha", "origen", "descripcion", "tipo", "espera"} <= c.keys()
+        assert required[c["tipo"]] <= c.keys()
+    assert len({c["id"] for c in cases}) == len(cases)
+
+
+def test_quick_install_repairs_the_downloaded_database(tmp_path):
+    import sqlite3
+    from pleno import instalador
+    path = tmp_path / "descargada.db"
+    con = sqlite3.connect(path)
+    con.execute("CREATE TABLE vote_casts(vote_id, person_id, official_id, party, sense)")
+    con.execute("INSERT INTO vote_casts VALUES ('diputados:lxvi:2', 'x', '50', '2', 'En contra')")
+    con.commit(); con.close()
+    instalador._repair(path)
+    assert sqlite3.connect(path).execute("SELECT party FROM vote_casts").fetchone()[0] == "PRD"

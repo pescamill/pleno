@@ -128,6 +128,7 @@ const ICONS = {
   vote: '<path d="M4 13h16v7H4zM8 13l3-9 6 2-2 7"/>',
   trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
   check: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+  flag: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
 };
 const icon = (name, cls = "") => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
 
@@ -279,6 +280,76 @@ async function copy(text, done) {
 function citation(r) {
   const who = r.person || r.speaker;
   return `«${plain(r.snippet || r.text).trim()}»\n— ${who}${r.role ? ` (${r.role})` : ""}, ${r.institution || instName(r.institution_id)}, ${fmtDate(r.date, true)}.\nFuente: ${r.source_url}`;
+}
+
+/* ---------- reporting an error ---------- */
+
+// Pleno runs on each person's computer, so a report goes to the public issue tracker, prefilled with what is on
+// screen. Nothing is sent until the person reviews it on GitHub; without an account they can copy it instead.
+const ISSUES = "https://github.com/pescamill/pleno/issues/new";
+const REPORT_KINDS = [
+  ["atribucion", "La frase se atribuye a la persona equivocada"],
+  ["partido", "Partido, cargo o institución incorrectos"],
+  ["texto", "Texto cortado, repetido o mal leído"],
+  ["veredicto", "La verificación da un resultado equivocado"],
+  ["fecha", "Fecha o enlace oficial incorrectos"],
+  ["otro", "Otra cosa"],
+];
+const reports = new Map();
+let reportSeq = 0;
+
+function reportButton(size = "", ctx = {}) {
+  const id = ++reportSeq;
+  reports.set(id, ctx);
+  return `<button type="button" class="btn ghost ${size}" data-report="${id}">${icon("flag")}Reportar un error</button>`;
+}
+
+function turnReport(r) {
+  return { tipo: "atribucion", que: `${citation(r)}\nDocumento: ${r.document_id} · intervención ${r.id}` };
+}
+
+function reportText(kind, ctx, note) {
+  const label = (REPORT_KINDS.find(k => k[0] === kind) || REPORT_KINDS.at(-1))[1];
+  return [`Tipo: ${label}`, `Dónde: ${location.hash || "#/"}`, ctx.que ? `\n${ctx.que}` : "",
+          note ? `\nQué está mal: ${note}` : ""].filter(Boolean).join("\n");
+}
+
+function openReport(ctx) {
+  // A page-level button reports the page: guess the likeliest problem from where it is, and name what is shown.
+  const page = location.hash.slice(2).split(/[/?]/)[0];
+  ctx = { tipo: { votacion: "partido", votaciones: "partido", persona: "partido", documento: "atribucion",
+                  verificar: "veredicto" }[page] || "otro", que: document.title.replace(/ · Pleno$/, ""), ...ctx };
+  let dlg = $("#report-dialog");
+  if (!dlg) {
+    dlg = document.createElement("dialog");
+    dlg.id = "report-dialog";
+    dlg.className = "report-dialog";
+    document.body.append(dlg);
+  }
+  dlg.innerHTML = `<form method="dialog" class="report-form">
+      <h2>Reportar un error</h2>
+      <p class="muted">Gracias: cada error confirmado se corrige y se agrega a las pruebas para que no vuelva.</p>
+      <label>¿Qué está mal?<select name="kind">${REPORT_KINDS.map(([k, l]) => `<option value="${k}"${k === ctx.tipo ? " selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
+      <label>Cuéntalo en una frase (opcional)<textarea name="note" rows="3" placeholder="Ej.: esta frase la dijo el diputado X, no la diputada Y. Lo confirmé en la versión oficial."></textarea></label>
+      ${ctx.que ? `<details><summary>Se incluye esto</summary><pre>${esc(ctx.que)}</pre></details>` : ""}
+      <p class="note">El reporte se abre en GitHub, es público y no lleva datos tuyos más que tu usuario de GitHub. Si no tienes cuenta, cópialo y compártelo como prefieras.</p>
+      <div class="report-actions">
+        <button type="button" class="btn ghost" value="cancel" data-close>Cancelar</button>
+        <button type="button" class="btn ghost" data-copy-report>${icon("copy")}Copiar reporte</button>
+        <button type="button" class="btn primary" data-send-report>${icon("ext")}Abrir en GitHub</button>
+      </div>
+    </form>`;
+  const form = $("form", dlg);
+  const text = () => reportText(form.kind.value, ctx, form.note.value.trim());
+  $("[data-close]", dlg).onclick = () => dlg.close();
+  $("[data-copy-report]", dlg).onclick = () => copy(text(), "Reporte copiado.");
+  $("[data-send-report]", dlg).onclick = () => {
+    const label = REPORT_KINDS.find(k => k[0] === form.kind.value)[1];
+    const url = `${ISSUES}?${new URLSearchParams({ template: "error-de-datos.yml", labels: "reporte", title: `Error: ${label}`, detalle: text() })}`;
+    window.open(url.slice(0, 7500), "_blank", "noopener");
+    dlg.close();
+  };
+  dlg.showModal();
 }
 
 /* ---------- charts ---------- */
@@ -444,6 +515,7 @@ function resultCard(r, { n, text } = {}) {
           <a href="${docHash(r.document_id, r.id, text)}">${icon("doc")}<span>Leer en contexto</span></a>
           <a href="${esc(r.source_url)}" target="_blank" rel="noopener">${icon("ext")}<span>Fuente oficial</span></a>
           <button type="button" data-copy="${r.id}">${icon("copy")}<span>Copiar cita</span></button>
+          <button type="button" data-report-turn="${r.id}" data-tip="Reportar un error" aria-label="Reportar un error">${icon("flag")}</button>
         </div>
       </footer>
     </div>
@@ -712,7 +784,7 @@ async function renderSearch(view, token, params) {
       ${q.texto ? `<div class="seg-ctl" role="group" aria-label="Orden"><button type="button" data-order="relevancia" class="${q.orden !== "fecha" ? "on" : ""}">Relevancia</button><button type="button" data-order="fecha" class="${q.orden === "fecha" ? "on" : ""}">Recientes</button></div>` : ""}
       <button type="button" class="btn ghost sm" id="csv" ${data.total ? "" : "disabled"}>${icon("download")}CSV</button>
       <button type="button" class="btn ghost sm only-local" id="mkalert">${icon("bell")}Crear alerta</button>
-      <button type="button" class="btn ghost sm" data-share>${icon("link")}Copiar enlace</button>
+      <button type="button" class="btn ghost sm" data-share>${icon("link")}Copiar enlace</button>${reportButton("sm")}
     </div>`;
   $$("[data-order]").forEach(b => b.onclick = () => editQuery(x => { x.orden = b.dataset.order; }));
   $("#csv").onclick = downloadCsv;
@@ -1000,7 +1072,7 @@ async function renderPerson(view, token, pid) {
           : `Partido tomado de la propia versión estenográfica («…del Grupo Parlamentario de ${esc(p.party)}»), no de una base externa.`}</p>` : ""}
       </div>
       <div class="profile-actions"><a class="btn primary" href="${all}">Todas sus intervenciones ${icon("arrow")}</a>
-        <button type="button" class="btn ghost" data-share>${icon("link")}Copiar enlace</button></div>
+        <button type="button" class="btn ghost" data-share>${icon("link")}Copiar enlace</button>${reportButton()}</div>
     </header>
     <dl class="kpis compact">
       <div class="kpi"><dt>intervenciones</dt><dd>${num(s.intervenciones)}</dd></div>
@@ -1080,7 +1152,7 @@ async function renderLaw(view, token, lid) {
         <p class="note">Menciones detectadas por nombre en las transcripciones${law.official_url ? " y vinculadas al catálogo oficial de leyes federales de la Cámara de Diputados" : ""}. Una intervención cuenta una vez aunque la nombre varias veces.</p>
       </div>
       <div class="profile-actions"><a class="btn primary" href="${all}">Todas las menciones ${icon("arrow")}</a>
-        <button type="button" class="btn ghost" data-share>${icon("link")}Copiar enlace</button></div>
+        <button type="button" class="btn ghost" data-share>${icon("link")}Copiar enlace</button>${reportButton()}</div>
     </header>
     <dl class="kpis compact">
       <div class="kpi"><dt>menciones</dt><dd>${num(s.menciones)}</dd></div>
@@ -1130,7 +1202,8 @@ function turnHtml(t, doc, focus, rx) {
     <div class="turn-main">
       <header class="who">${who}${pill(t.party)}${t.role ? `<span class="role">${esc(t.role)}</span>` : ""}${t.outlet ? `<span class="role">· ${esc(t.outlet)}</span>` : ""}
         <span class="turn-tools"><a href="${docHash(doc.id, t.id)}" data-tip="Enlace a esta intervención" aria-label="Enlace a esta intervención">${icon("link")}</a>
-        <button type="button" data-copy="${t.id}" data-tip="Copiar cita" aria-label="Copiar cita">${icon("copy")}</button></span></header>
+        <button type="button" data-copy="${t.id}" data-tip="Copiar cita" aria-label="Copiar cita">${icon("copy")}</button>
+        <button type="button" data-report-turn="${t.id}" data-tip="Reportar un error" aria-label="Reportar un error">${icon("flag")}</button></span></header>
       <div class="turn-text">${t.text.split(/\n+/).map(p => `<p>${highlight(p, rx)}</p>`).join("")}</div>
       ${t.leyes.length ? `<div class="tags">${t.leyes.map(l => `<a class="tag" href="#/ley/${encodeURIComponent(l.id)}">${icon("scale")}${esc(l.nombre)}</a>`).join("")}</div>` : ""}
     </div></section>`;
@@ -1166,7 +1239,7 @@ async function renderDocument(view, token, docId, params) {
       <h1>${esc(cleanTitle(doc.title, doc.date))}</h1>
       <div class="doc-actions">
         <a class="btn ghost" href="${esc(doc.source_url)}" target="_blank" rel="noopener">${icon("ext")}Versión oficial</a>
-        <button type="button" class="btn ghost" data-share>${icon("link")}Copiar enlace</button>
+        <button type="button" class="btn ghost" data-share>${icon("link")}Copiar enlace</button>${reportButton()}
         <span class="muted">${num(ts.length)} intervenciones · ${num(spk.length)} oradores${lawList.length ? ` · ${num(lawList.length)} leyes` : ""}</span>
       </div>
     </header>
@@ -1244,7 +1317,7 @@ async function renderVote(view, token, vid) {
     <header class="page-head"><p class="eyebrow">${icon("vote")}${esc(v.institution)} · ${fmtDate(v.date, true)}</p>
       <h1 class="vote-h1">${esc(cleanVoteTitle(v.title))}</h1>
       <div class="doc-actions"><a class="btn ghost" href="${esc(v.source_url)}" target="_blank" rel="noopener">${icon("ext")}Fuente oficial</a>
-        <button type="button" class="btn ghost" data-share>${icon("link")}Copiar enlace</button></div></header>
+        <button type="button" class="btn ghost" data-share>${icon("link")}Copiar enlace</button>${reportButton()}</div></header>
     <section class="panel"><div class="panel-head"><h2>Resultado</h2></div>${voteBar({ "A favor": v.a_favor, "En contra": v.en_contra, "Abstención": v.abstencion, "Ausente": v.ausente, ...(v.otros ? { Otros: v.otros } : {}) })}</section>
     <div class="page-grid">
       <div class="main-col">
@@ -1471,7 +1544,8 @@ async function renderVerify(view, token, params) {
       <p class="verdict-text">${esc(r.texto || "")}</p>
       <p class="note">Método: ${esc(r.metodo)}${r.modelo ? ` (${esc(r.modelo)})` : ""}. Verifica siempre en la fuente oficial antes de publicar.</p>
       <div class="share-row"><button type="button" class="btn primary sm" id="share-img">${icon("download")}Compartir imagen</button>
-        <button type="button" class="btn ghost sm" id="share-link">${icon("link")}Copiar enlace</button></div>
+        <button type="button" class="btn ghost sm" id="share-link">${icon("link")}Copiar enlace</button>
+        ${reportButton("sm", { tipo: "veredicto", que: `Afirmación: ${claim}\nVeredicto de Pleno: ${r.etiqueta} (${r.metodo})` })}</div>
     </article>
     ${r.metodo.startsWith("cifras") ? "" : figures}${r.metodo.startsWith("cifras") ? figures : ""}
     ${votes ? `<section class="panel"><h2>Votación nominal</h2><ul class="ev-list">${votes}</ul></section>` : ""}
@@ -1606,11 +1680,13 @@ function init() {
   options().catch(() => {});
 
   document.addEventListener("click", e => {
-    const t = e.target.closest("[data-copy], [data-share], [data-back], [data-retry]");
+    const t = e.target.closest("[data-copy], [data-share], [data-back], [data-retry], [data-report], [data-report-turn]");
     if (!e.target.closest("#fmenu") && !e.target.closest("#addfilter")) closeMenu();
     if (!t) return;
     if (t.matches("[data-copy]")) { const r = turns.get(+t.dataset.copy); if (r) copy(citation(r), "Cita copiada con su fuente."); }
     else if (t.matches("[data-share]")) copy(location.href, "Enlace copiado.");
+    else if (t.matches("[data-report]")) openReport(reports.get(+t.dataset.report) || {});
+    else if (t.matches("[data-report-turn]")) { const r = turns.get(+t.dataset.reportTurn); openReport(r ? turnReport(r) : {}); }
     else if (t.matches("[data-retry]")) route();
     else if (t.matches("[data-back]")) {
       e.preventDefault();

@@ -30,6 +30,7 @@ METRICS = {
     "integridad.fechas_imposibles": ("bajo", 0),
     "integridad.votaciones_fuera_de_legislatura": ("bajo", 0),
     "integridad.intervenciones_vacias": ("bajo", 0),
+    "integridad.votos_con_partido_desconocido": ("bajo", 0),
     "atribucion.con_persona_pct": ("alto", 0.5),
     "atribucion.legisladores_con_partido_pct": ("alto", 0.5),
     "atribucion.partido_coincide_con_padron_pct": ("alto", 0.5),
@@ -41,6 +42,7 @@ METRICS = {
     "busqueda.latencia_p50_ms": ("bajo", 75),
     "nlq.exactitud_pct": ("alto", 0),
     "verificacion.exactitud_pct": ("alto", 0),
+    "reportes.corregidos_pct": ("alto", 0),
 }
 
 
@@ -62,6 +64,9 @@ def integrity(con):
         "votaciones_fuera_de_legislatura": _one(con, "SELECT COUNT(*) FROM votes WHERE date < '2024-09-01' OR date > ?",
                                                 today),
         "intervenciones_vacias": _one(con, "SELECT COUNT(*) FROM turns WHERE LENGTH(TRIM(text)) < 5"),
+        # Every roll-call vote must carry a party acronym (MORENA, PAN… or IND), never the site's internal id.
+        "votos_con_partido_desconocido": _one(con, "SELECT COUNT(*) FROM vote_casts WHERE party IS NULL "
+                                                   "OR party NOT GLOB '[A-Z]*'"),
     }
 
 
@@ -167,6 +172,39 @@ def verification_accuracy(con, llm=True):
     return {"exactitud_pct": _pct(ok, len(cases)), "casos": len(cases), "fallos": failures}
 
 
+def reports(con, cases=None):
+    """Errors people reported and that were fixed (evals/reportes.json) must stay fixed.
+
+    Each confirmed report becomes a case, so the same mistake cannot come back unnoticed."""
+    if cases is None:
+        path = GOLD_DIR / "reportes.json"
+        cases = json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+    ok, failures = 0, []
+    for case in cases:
+        got = _report_value(con, case)
+        if got == case["espera"]:
+            ok += 1
+        else:
+            failures.append({"id": case["id"], "tipo": case["tipo"], "obtuvo": got, "espera": case["espera"]})
+    return {"corregidos_pct": _pct(ok, len(cases)), "casos": len(cases), "fallos": failures}
+
+
+def _report_value(con, case):
+    kind = case["tipo"]
+    if kind == "partido_voto":
+        row = con.execute("SELECT party FROM vote_casts WHERE vote_id = ? AND person_id = ?",
+                          (case["votacion"], case["persona"])).fetchone()
+        return row[0] if row else None
+    if kind == "persona_intervencion":
+        row = con.execute("SELECT person_id FROM turns WHERE document_id = ? AND text LIKE ? LIMIT 1",
+                          (case["documento"], f"%{case['texto']}%")).fetchone()
+        return row[0] if row else None
+    if kind == "veredicto":
+        from pleno import verificar
+        return verificar.verify(con, case["afirmacion"], use_llm=False)["veredicto"]
+    raise ValueError(f"tipo de reporte desconocido: {kind}")
+
+
 def run(con=None, llm=False, save=True):
     con = con or db.connect()
     started = time.time()
@@ -174,6 +212,7 @@ def run(con=None, llm=False, save=True):
         "fecha": dt.datetime.now().isoformat(timespec="seconds"),
         "integridad": integrity(con), "atribucion": attribution(con), "leyes": laws(con),
         "busqueda": retrieval(con), "nlq": nlq_accuracy(), "verificacion": verification_accuracy(con, llm=llm),
+        "reportes": reports(con),
         "tamano": {"documentos": _one(con, "SELECT COUNT(*) FROM documents"),
                    "intervenciones": _one(con, "SELECT COUNT(*) FROM turns"),
                    "personas": _one(con, "SELECT COUNT(*) FROM people"),
@@ -222,7 +261,7 @@ def report(result, previous):
         lines.append(f"  {name:<52} {'' if b is None else b}{delta}  [mejor {better}]")
     for r in result["regresiones"]:
         lines.append(f"  REGRESIÓN {r['metrica']}: {r['antes']} → {r['ahora']}")
-    for group in ("nlq", "verificacion"):
+    for group in ("nlq", "verificacion", "reportes"):
         for f in result[group].get("fallos", [])[:5]:
             lines.append(f"  falla {group}: {json.dumps(f, ensure_ascii=False)}")
     return "\n".join(lines)

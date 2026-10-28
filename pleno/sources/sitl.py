@@ -19,22 +19,23 @@ LEGISLATURE = "LXVI"
 BASE = "https://sitl.diputados.gob.mx/LXVI_leg/"
 # listado_diputados_gpnp.php?tipot=N lists one parliamentary group; N is the site's own party id.
 GROUPS = {14: "MORENA", 3: "PAN", 5: "PVEM", 4: "PT", 1: "PRI", 6: "MC", 9: "IND"}
-DAY = 24 * 3600
+# Every party id the vote summaries have used, including groups that no longer have a bench.
+SITE_PARTIES = {**GROUPS, 2: "PRD"}
 
 
-def _get(path, cache, max_age=None, delay=0.5):
-    raw = fetch_cached(BASE + path, CACHE_DIR / NAME / cache, delay=delay, max_age=max_age)
-    return raw.decode("utf-8", "replace") if raw else ""
+def summary_parties(summary, vid):
+    """{site party id: acronym} as the vote's own summary labels each listing link.
 
-
-def _text(fragment):
-    return re.sub(r"\s+", " ", htmllib.unescape(re.sub(r"<[^>]+>", " ", fragment))).strip()
-
-
-def _field(page, label):
-    """«<p>Entidad: <b> Michoacán </b>» → «Michoacán»."""
-    m = re.search(label + r"\s*:\s*<b>\s*([^<]+?)\s*</b>", page, re.I)
-    return htmllib.unescape(m.group(1)).strip() if m else None
+    The label is the record of that day: a deputy listed under «PRD» in September 2024 stays PRD there even if the
+    roster now says PRI. (The listing pages' own headings are not used: some say «Movimiento Regeneración
+    Nacional» above the PVEM bench.)"""
+    links = re.findall(r'listados_votacionesnplxvi\.php\?partidot=(\d+)&(?:amp;)?votaciont=' + vid + r'"[^>]*>\s*([^<]*?)\s*<',
+                       summary)
+    out = {}
+    for pid, label in links:
+        label = label.strip().upper()
+        out.setdefault(pid, label if re.fullmatch(r"[A-ZÑ]{2,8}", label) else SITE_PARTIES.get(int(pid)))
+    return out
 
 
 def roster(delay=0.5):
@@ -86,10 +87,11 @@ def votes(since=None, delay=0.5):
             if since and when and when < since:
                 continue
             casts = []
+            parties = summary_parties(summary, vid)
             for partidot in dict.fromkeys(re.findall(r"listados_votacionesnplxvi\.php\?partidot=(\d+)&(?:amp;)?votaciont=" + vid, summary)):
                 listing = _get(f"listados_votacionesnplxvi.php?partidot={partidot}&votaciont={vid}",
                                f"votaciones/{vid}/{partidot}.html", delay=delay)
-                party = GROUPS.get(int(partidot), partidot)
+                party = parties.get(partidot) or SITE_PARTIES.get(int(partidot))
                 for iddipt, name, sense in re.findall(
                         r"iddipt=(\d+)[^>]*>([^<]+)</a>.*?<span[^>]*>\s*([^<]+?)\s*</span>\s*</td>\s*</tr>", listing, re.S):
                     casts.append((iddipt, title_name(htmllib.unescape(name).strip()), party,

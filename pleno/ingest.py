@@ -368,6 +368,14 @@ def load_crime_stats(con, rows):
     return n
 
 
+def repair_vote_parties(con):
+    """Older databases stored the site's numeric party id when it was not in the list; name it."""
+    n = 0
+    for pid, party in sitl.SITE_PARTIES.items():
+        n += con.execute("UPDATE vote_casts SET party = ? WHERE party = ?", (party, str(pid))).rowcount
+    return n
+
+
 def load_votes(con, votes, institution="diputados", legislature=sitl.LEGISLATURE):
     members = dict(con.execute("SELECT official_id, person_id FROM memberships WHERE institution_id = ? AND legislature = ?",
                                (institution, legislature)).fetchall())
@@ -384,6 +392,10 @@ def load_votes(con, votes, institution="diputados", legislature=sitl.LEGISLATURE
         con.executemany(
             "INSERT OR IGNORE INTO vote_casts(vote_id, person_id, official_id, party, sense) VALUES (?, ?, ?, ?, ?)",
             [(v["id"], members.get(oid), oid, party, sense) for oid, _, party, sense in v["casts"]])
+        # A party id the site never labelled: the deputy's party in the official roster is the best record left.
+        con.execute("""UPDATE vote_casts SET party = (SELECT m.party FROM memberships m WHERE m.institution_id = ?
+                         AND m.legislature = ? AND m.official_id = vote_casts.official_id)
+                       WHERE vote_id = ? AND (party IS NULL OR party GLOB '[0-9]*')""", (institution, legislature, v["id"]))
         new += not exists
         if seen % 50 == 0:
             con.commit()
@@ -460,6 +472,7 @@ def run(names=None, since=None, limit=None, con=None):
                 upsert_institutions(con, diputados)
                 load_roster(con, sitl.roster())
                 seen, loaded = load_votes(con, sitl.votes(since=src_since))
+                repair_vote_parties(con)
             else:
                 source = SOURCES[name]
                 upsert_institutions(con, source)

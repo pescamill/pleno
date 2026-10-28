@@ -162,12 +162,19 @@ La caja de búsqueda sugiere personas y leyes mientras escribes (`/` la enfoca).
   la fuente. Pleno no dice si algo es verdad en el mundo: dice qué muestra el registro oficial.
 - **`pleno evaluar`**: mide integridad, atribución de oradores y partidos, ruido en leyes, búsqueda (recall@10 de una
   cita a su documento), intérprete de preguntas (`evals/nlq.json`) y verificador (casos construidos del propio
-  registro). Guarda cada corrida en `data/evals/historial.jsonl` y marca regresiones contra la anterior; sale con
+  registro) y que los errores reportados sigan corregidos (`evals/reportes.json`). Guarda cada corrida en `data/evals/historial.jsonl` y marca regresiones contra la anterior; sale con
   código 1 si hay alguna. Corre sola después de cada actualización diaria.
 - **`pleno dataset`**: snapshot en Parquet para venta o entrenamiento (`data/dataset/pleno-AAAA-MM-DD/`), separado por
   licencia (mañaneras CC BY-SA 4.0; textos oficiales, LFDA art. 14 fr. VIII), con periodistas por papel y no por nombre,
   personas detenidas seudonimizadas, ficha del dataset, licencias y manifiesto SHA-256.
 - **`GET /api/v1/estadistica?delito=homicidios&estado=Jalisco`**: serie mensual oficial del SESNSP.
+
+## Reportar un error
+
+En Pleno, cada resultado, verificación, votación, persona y documento tiene **Reportar un error**. Abre un reporte en
+[GitHub](https://github.com/pescamill/pleno/issues/new?template=error-de-datos.yml) con lo que estás viendo ya escrito
+(o lo copia, si no tienes cuenta). Cada error confirmado se corrige en el código y se agrega como caso a
+`evals/reportes.json`: `pleno evaluar` falla si vuelve a aparecer.
 
 ## Hospedaje
 
@@ -183,6 +190,10 @@ Publicar es un paso público: se hace solo cuando lo decidas.
   sobre la fijación de sus señales (LFDA art. 144).
 - Los textos de los actos oficiales no están protegidos (LFDA art. 14 fr. VIII, por confirmar con un abogado).
   Pleno vende estructura, búsqueda, alertas y API, no exclusividad sobre los textos.
+
+## Licencia
+
+Código: [MIT](LICENSE). Los datos conservan la licencia de su fuente (ver `pleno dataset`).
 
 ## Siguiente
 

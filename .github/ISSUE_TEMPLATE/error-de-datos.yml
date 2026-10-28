@@ -1,0 +1,21 @@
+name: Error en los datos
+description: Una frase atribuida a otra persona, un partido equivocado, un veredicto que no cuadra…
+title: "Error: "
+labels: ["reporte"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por avisar. Cada error confirmado se corrige y se agrega a `evals/reportes.json`, para que las pruebas
+        avisen si vuelve a aparecer. Si lo abriste desde Pleno, lo de abajo ya viene lleno: revísalo y envíalo.
+  - type: textarea
+    id: detalle
+    attributes:
+      label: Qué viste y dónde
+      description: Lo que muestra Pleno, qué está mal y, si lo sabes, qué dice la fuente oficial.
+    validations:
+      required: true
+  - type: input
+    id: fuente
+    attributes:
+      label: Enlace oficial que lo confirma (opcional)

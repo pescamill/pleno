@@ -8,6 +8,7 @@ Either way, the daily update afterwards reads only what is new from the official
 
 import os
 import re
+import sqlite3
 import subprocess
 import sys
 import threading
@@ -78,11 +79,23 @@ def _quick():
                 done += len(chunk)
                 _set(bytes=done, total=total, progreso=round(100 * done / total, 1) if total else None)
         os.replace(part, dest)
+        _repair(dest)
         _switch(dest)
         _set(etapa="Listo: la base está cargada.", progreso=100, terminado=True, activo=False)
     except Exception as e:
         part.unlink(missing_ok=True)
         _set(error=f"{type(e).__name__}: {e}", etapa="La descarga falló.", activo=False)
+
+
+def _repair(path):
+    """Fixes found after the ready-made database was published, so a quick install gets them at once."""
+    from pleno import ingest
+    con = sqlite3.connect(path)
+    try:
+        ingest.repair_vote_parties(con)
+        con.commit()
+    finally:
+        con.close()
 
 
 def _switch(path):

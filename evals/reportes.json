@@ -1,0 +1,13 @@
+[
+ {
+  "id": "R1",
+  "fecha": "2026-10-28",
+  "origen": "revisión propia",
+  "descripcion": "En las votaciones del 3 de septiembre de 2024, Mónica Elizabeth Sandoval Hernández aparecía con el grupo «2» (el número interno del sitio) en vez de PRD, que es como la registra el resumen oficial de cada votación.",
+  "fuente": "https://sitl.diputados.gob.mx/LXVI_leg/estadistico_votacionnplxvi.php?votaciont=2",
+  "tipo": "partido_voto",
+  "votacion": "diputados:lxvi:2",
+  "persona": "monica-elizabeth-sandoval-hernandez",
+  "espera": "PRD"
+ }
+]

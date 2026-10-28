@@ -4,6 +4,32 @@ Registro de cada iteración de Pleno: lo nuevo y casos de uso concretos. Se actu
 
 ---
 
+## Iteración 12 · Reportes de error y partidos en votaciones (28 oct 2026)
+
+**Qué se añadió**
+- **Reportar un error** en cada resultado, verificación, votación, persona, documento y búsqueda. Se elige qué está
+  mal (atribución, partido o cargo, texto, veredicto, fecha o enlace), se agrega una frase y se abre un reporte en
+  GitHub con lo que se está viendo ya escrito. Sin cuenta de GitHub, «Copiar reporte». Pleno no envía nada por su
+  cuenta.
+- **Formulario de reporte** en GitHub (`.github/ISSUE_TEMPLATE/error-de-datos.yml`).
+- **Los reportes se vuelven pruebas**: cada error confirmado entra a `evals/reportes.json` y `pleno evaluar` mide
+  `reportes.corregidos_pct`; si un error corregido vuelve, es regresión.
+- **Corrección en votaciones**: en 4 votaciones de septiembre de 2024 una diputada aparecía con el grupo «2» (número
+  interno del sitio). El partido ahora se toma de la etiqueta del resumen oficial de cada votación (ahí dice PRD), con
+  el padrón como respaldo. Nueva métrica `integridad.votos_con_partido_desconocido` (debe ser 0). Las bases ya
+  descargadas se reparan solas al instalarse o en la actualización diaria.
+- Se revisaron las 296 votaciones: las etiquetas del resumen coinciden con los partidos ya guardados; los
+  encabezados de las listas no son confiables (algunos dicen «Morena» sobre la lista del PVEM) y no se usan.
+- **Licencia MIT** para el código.
+- En celular, los nombres largos de leyes en los resultados ya no ensanchan la página.
+
+**Casos de uso**
+- Una periodista ve una frase atribuida a la persona equivocada, la reporta en 20 segundos y, una vez corregida,
+  queda vigilada por las pruebas.
+- «¿Cómo votó el PRD la reforma judicial?» ya cuenta a su diputada en vez de mostrar un grupo «2».
+
+---
+
 ## Iteración 11 · Página de presentación (28 oct 2026)
 
 **Qué se añadió**
