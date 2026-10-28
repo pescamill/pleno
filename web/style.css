@@ -769,13 +769,13 @@ ul.plain li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 }
 
 /* Verify a claim */
-.verify-form { display: grid; gap: 12px; }
-.verify-form textarea { width: 100%; font: inherit; font-size: 16px; line-height: 1.5; padding: 12px 14px; border-radius: 10px;
+.verify-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.verify-form textarea { box-sizing: border-box; width: 100%; font: inherit; font-size: 16px; line-height: 1.5; padding: 12px 14px; border-radius: 10px;
   border: 1px solid var(--line); background: var(--bg); color: var(--ink); resize: vertical; }
 .verify-form textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .verify-actions { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
 .verify-actions .tags { flex: 1; min-width: 0; }
-.tag.ex { cursor: pointer; border: 1px solid var(--line); background: var(--surface); text-align: left; }
+.tag.ex { cursor: pointer; border: 1px solid var(--line); background: var(--surface); text-align: left; white-space: normal; max-width: 100%; }
 .tag.ex:hover { border-color: var(--accent-line); }
 #verdict { display: grid; gap: 16px; margin-top: 18px; }
 .verdict { border-left: 4px solid var(--muted); }
@@ -829,3 +829,7 @@ ul.plain li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
   .verify-cta-form { flex-direction: column; }
 }
 .verify-cta .tag.ex { white-space: normal; max-width: 100%; }
+@media (max-width: 760px) {
+  .verify-actions { flex-direction: column; align-items: stretch; }
+  .verify-actions .btn { justify-content: center; }
+}

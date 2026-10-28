@@ -216,7 +216,15 @@ def alerta_rss(aid: str):
 @app.get("/api/v1/panorama", dependencies=[api])
 def panorama():
     """What is new, which laws are being discussed and who speaks most, for the home page."""
-    return search.panorama(con())
+    # It scans the whole base (seconds on a small host) and only changes when new data is loaded.
+    now = time.time()
+    if not _panorama or now - _panorama[0] > PANORAMA_TTL:
+        _panorama[:] = [now, search.panorama(con())]
+    return _panorama[1]
+
+
+_panorama = []
+PANORAMA_TTL = 24 * 3600 if PUBLIC else 600
 
 
 @app.get("/api/v1/sugerir", dependencies=[light])

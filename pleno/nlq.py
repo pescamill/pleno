@@ -48,8 +48,19 @@ hablo hablaron habla hablan menciono mencionaron mencionan opina opinan opino de
 tema temas veces todo todos todas han ha sido fue fueron hizo hicieron propuso propusieron ultimo ultima ultimos ultimas""".split())
 
 
+_WORD = set("abcdefghijklmnopqrstuvwxyz0123456789")
+
+
 def _contains(folded, phrase):
-    return re.search(rf"(?<![a-z0-9]){re.escape(phrase)}(?![a-z0-9])", folded) is not None
+    """`phrase` appears in `folded` as whole words. Plain `find`, not a regex: it runs once per law name
+    (thousands) on every question, and compiling a pattern each time made a question take seconds."""
+    i = folded.find(phrase)
+    while i != -1:
+        j = i + len(phrase)
+        if (i == 0 or folded[i - 1] not in _WORD) and (j == len(folded) or folded[j] not in _WORD):
+            return True
+        i = folded.find(phrase, i + 1)
+    return False
 
 
 @lru_cache(maxsize=1)
