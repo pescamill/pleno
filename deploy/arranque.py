@@ -32,6 +32,11 @@ def fetch():
             os.chmod(TARGET, 0o644)
         print("Base lista.", flush=True)
         ready.set()
+        # Warm what the home page and the first question need, so the first visitor does not wait for it.
+        from pleno import api, db, nlq
+        api.panorama()
+        nlq.interpret("¿Qué dijo la presidenta sobre el agua en 2025?", db.DB_FILE)
+        print("Portada precalculada.", flush=True)
     except Exception:
         failed.append(traceback.format_exc())
         print(failed[-1], flush=True)
