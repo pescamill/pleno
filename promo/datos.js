@@ -50,8 +50,8 @@ window.DATA = {
   "anterior": 30060,
   "cambio": -21.5
  },
- "documentos": 18379,
- "intervenciones": 495742,
+ "documentos": 19432,
+ "intervenciones": 497334,
  "congresos": 18,
  "fiscalias": 3
 };

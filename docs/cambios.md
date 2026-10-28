@@ -4,6 +4,35 @@ Registro de cada iteración de Pleno: lo nuevo y casos de uso concretos. Se actu
 
 ---
 
+## Iteración 10 · Instalación local y código abierto (28 oct 2026)
+
+**Qué se añadió**
+- **Repositorio público**: https://github.com/pescamill/pleno (los commits usan el correo privado de GitHub).
+- **Instalador de una línea** para Mac/Linux (`instalar.sh`) y Windows (`instalar.ps1`): instala `uv` (que trae su propio
+  Python), descarga Pleno en la carpeta del usuario, deja **Pleno** en el Escritorio y lo abre en el navegador.
+  Volver a correrlo actualiza Pleno sin borrar los datos.
+- **Asistente de primera vez** (`#/instalar`): elegir **Rápido** (base lista de Hugging Face, ≈2 GB) o **Desde las
+  fuentes oficiales** (horas, con la lista de fuentes y tiempos), con barra de progreso, y programar la
+  actualización diaria (launchd en Mac, Programador de tareas en Windows, cron en Linux).
+- **Actualización por fuente**: cada fuente se reanuda desde su último documento (menos 14 días), así una instalación
+  nueva no vuelve a descargar todo cada día. Las mañaneras se actualizan desde Hugging Face sin necesidad de `git`.
+- **La base se cambia sin reiniciar** (y sin sobrescribir un archivo abierto, que Windows no permite).
+- `pleno abrir`: lo que corre el acceso directo; elige un puerto libre y abre el navegador.
+- Se dio de baja la demo en Render (servicio y Blueprint borrados).
+- **Nuevo reel** (`promo/pleno-local.mp4`, 32 s): gratis, código abierto, instalación, elección de datos, qué hace,
+  actualización diaria, límites y crédito a Pablo Escamilla.
+
+**Casos de uso**
+- Un periodista o estudiante instala Pleno en 5 minutos y trabaja sin depender de un servidor ajeno.
+- Alguien desconfiado de bases ajenas elige «desde las fuentes oficiales» y arma todo en su computadora.
+- Un desarrollador revisa el código, propone fuentes nuevas o lo adapta: el proyecto sirve de carta de presentación.
+
+**Probado**: instalación real desde GitHub en una carpeta aislada (uv, Python, dependencias, acceso directo,
+asistente), instalación «Rápido» de punta a punta con una base de prueba, y las pruebas en Python 3.12.
+**No probado**: el instalador de Windows (no hay Windows a la mano).
+
+---
+
 ## Iteración 9 · En línea (28 oct 2026)
 
 **Qué se añadió**

@@ -1,6 +1,7 @@
 """Render the reel to MP4, frame by frame, with Chrome and ffmpeg.
 
     .venv/bin/python promo/render.py                 → promo/pleno-reel.mp4 (1080×1920, 30 fps)
+    .venv/bin/python promo/render.py --reel local    → promo/pleno-local.mp4 (el anuncio de la instalación local)
     .venv/bin/python promo/render.py --fotos 2,15,27 → PNG stills of those seconds, to check a scene
 """
 
@@ -11,21 +12,23 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 HERE = Path(__file__).resolve().parent
-PAGE = (HERE / "reel.html").as_uri()
+PAGES = {"reel": HERE / "reel.html", "local": HERE / "reel-local.html"}
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--fps", type=int, default=30)
+    ap.add_argument("--reel", default="reel", choices=sorted(PAGES), help="qué anuncio renderizar")
     ap.add_argument("--fotos", help="segundos separados por coma")
-    ap.add_argument("--salida", default=str(HERE / "pleno-reel.mp4"))
+    ap.add_argument("--salida", help="por defecto promo/pleno-<reel>.mp4")
     ap.add_argument("--carpeta-fotos", default=str(HERE / "fotos"))
     args = ap.parse_args()
+    args.salida = args.salida or str(HERE / ("pleno-reel.mp4" if args.reel == "reel" else f"pleno-{args.reel}.mp4"))
 
     with sync_playwright() as pw:
         browser = pw.chromium.launch(channel="chrome")
         page = browser.new_page(viewport={"width": 1080, "height": 1920}, device_scale_factor=1)
-        page.goto(PAGE)
+        page.goto(PAGES[args.reel].as_uri())
         page.evaluate("window.ready")
         page.wait_for_timeout(300)
         if args.fotos:

@@ -1,34 +1,44 @@
-# Publicación del reel
+# Publicación
 
-Archivo: `promo/pleno-reel.mp4` (1080×1920, 30 fps, 49 s, sin audio). Agrega el sonido desde la app (un audio en
-tendencia sin letra funciona mejor que una canción con voz, para no tapar el texto).
+## Reel actual: instalación local
 
-## Texto (Instagram / TikTok)
+Archivo: `promo/pleno-local.mp4` (1080×1920, 30 fps, 32 s, sin audio; agrega un sonido en tendencia desde la app).
+Se vuelve a generar con `.venv/bin/python promo/render.py --reel local` (las cifras salen de la base: `promo/datos.py`).
+
+### Texto para Instagram
 
 ¿Lo dijo? ¿Lo votó? ¿Es cierto? 🏛️
 
-Pleno junta mañaneras, Cámara de Diputados, Suprema Corte, fiscalías, congresos estatales y cifras oficiales de
-delitos en un solo buscador. Pegas una afirmación y te muestra qué dice el registro oficial, con la fuente.
+Hice Pleno: un buscador de lo que se dice en el poder público de México que vive en tu computadora.
+Mañaneras, Cámara de Diputados, Suprema Corte, fiscalías, 18 congresos estatales y cifras oficiales de delitos,
+con la fuente oficial de cada resultado.
 
-Lo que NO hace: no decide qué es verdad, no tiene todo (el Senado bloquea robots) y puede fallar. Siempre enlaza la
-fuente para que lo revises tú.
+✅ Gratis y de código abierto
+💻 Se instala pegando una línea (Mac, Windows, Linux)
+⬇️ Tú eliges: base lista (≈2 GB, minutos) o descargar directo de las fuentes oficiales
+🔄 Se actualiza solo cada día
+🔎 Verifica votos, citas textuales y cifras
 
-Gratis. Link en la bio.
+Lo que NO hace: no decide qué es verdad (muestra el registro), no tiene todo (el Senado bloquea robots) y puede
+fallar: siempre abre la fuente antes de publicar.
 
-#México #DatosAbiertos #Periodismo #FactCheck #Transparencia #Congreso #Mañanera
+Link en la bio → github.com/pescamill/pleno
 
-## Texto (X / LinkedIn)
+#México #DatosAbiertos #Periodismo #FactCheck #Transparencia #CódigoAbierto #Python
 
-Construí Pleno: un buscador de lo que se dice en el poder público de México (mañaneras, Cámara de Diputados, Corte,
-fiscalías, 18 congresos estatales y cifras del SESNSP).
+### Comentario fijado
 
-Pegas «X votó a favor de Y» o «bajaron los homicidios» y te muestra el registro oficial: la votación nominal, la cita
-exacta o la cifra, con su fuente. No dice si algo es verdad; dice qué muestra el registro.
+Cómo instalarlo: en Mac abre Terminal y pega
+curl -LsSf https://raw.githubusercontent.com/pescamill/pleno/main/instalar.sh | sh
+En Windows abre PowerShell y pega
+irm https://raw.githubusercontent.com/pescamill/pleno/main/instalar.ps1 | iex
 
-Pruébalo: https://pleno-x7dq.onrender.com
+### Antes de publicar
 
-## Antes de publicar
+1. Pon `https://github.com/pescamill/pleno` en tu bio.
+2. Si alguien comenta un error, agradécelo y corrígelo en público: es parte del valor del proyecto.
 
-1. Abre https://pleno-x7dq.onrender.com y prueba los ejemplos del reel (búsqueda del agua, voto de la reforma judicial, homicidios 2025).
-2. Pon https://pleno-x7dq.onrender.com en tu bio. Es una demo gratuita: si nadie la usó en 15 min, tarda ~1–2 min en despertar (muestra «Pleno está despertando»). Ábrela tú un minuto antes de publicar.
-3. Fija un comentario con los límites (no decide qué es verdad; puede fallar; revisa la fuente).
+## Reel anterior (demo en línea)
+
+`promo/pleno-reel.mp4` presentaba la demo en línea, que ya se dio de baja. No lo publiques tal cual: su cierre dice
+«Link en la bio» pensando en esa demo.
