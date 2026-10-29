@@ -662,6 +662,7 @@ async function renderHome(view, token) {
   }
   if (token !== routeSeq) return;
   $("#asof").textContent = `actualizado al ${fmtDate(pano.hasta, true)}`;
+  call("/actualizacion").then(u => { if (u.en_curso && token === routeSeq) $("#asof").textContent += " · bajando lo de hoy…"; }).catch(() => {});
   const withDocs = opts.instituciones.filter(i => i.documentos);
   $("#lede").innerHTML = `${num(opts.documentos)} sesiones, conferencias y comunicados de Presidencia, la Cámara de Diputados, la Suprema Corte, la Fiscalía General y ${num(withDocs.filter(i => i.nivel === "estatal").length)} congresos estatales, convertidos en datos: quién habló, con qué cargo, de qué partido, sobre qué ley y cómo votó. Cada resultado enlaza a su fuente oficial.`;
   $("#kpis").innerHTML = [["intervenciones", opts.intervenciones], ["documentos", opts.documentos], ["personas", opts.personas], ["votaciones nominales", opts.votaciones]]

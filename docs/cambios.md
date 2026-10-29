@@ -4,6 +4,26 @@ Registro de cada iteración de Pleno: lo nuevo y casos de uso concretos. Se actu
 
 ---
 
+## Iteración 13 · Datos al día al abrir Pleno (29 oct 2026)
+
+**Qué se añadió**
+- **Al abrir Pleno se pone al día**: si la última actualización tiene más de 20 horas (la computadora estaba apagada
+  a las 7:00, o nunca se programó la diaria), baja lo nuevo de las fuentes oficiales en segundo plano, con prioridad
+  baja, mientras ya lo usas. La portada dice «bajando lo de hoy…» mientras avanza.
+- **Una sola actualización a la vez**: si la diaria de las 7:00 y la de apertura coinciden, la segunda no arranca.
+- Si cierras Pleno a medias, la siguiente vez continúa: lo ya descargado queda en caché.
+- Para apagarlo: `PLENO_SIN_ACTUALIZAR=1`.
+- **Corrección**: desde la iteración 12, la actualización diaria fallaba en la fuente de votaciones y padrón (SITL)
+  porque se habían borrado unas funciones internas por error. Restauradas; vuelve a leer a los 500 diputados.
+
+**Casos de uso**
+- Abres Pleno el lunes después de un fin de semana con la laptop apagada: sin hacer nada, se bajan la mañanera y
+  las sesiones de esos días.
+- En Windows o Linux, donde la tarea de las 7:00 no se recupera si el equipo estaba apagado, abrir Pleno basta.
+- Quien eligió no programar la actualización diaria igual tiene datos frescos cada vez que lo abre.
+
+---
+
 ## Iteración 12 · Reportes de error y partidos en votaciones (28 oct 2026)
 
 **Qué se añadió**

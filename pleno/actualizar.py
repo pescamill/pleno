@@ -26,6 +26,10 @@ from pleno.sources import mananeras
 
 ALERTS_DIR = db.ROOT / "data" / "alertas"
 LOG_FILE = db.ROOT / "data" / "actualizaciones.log"
+LAST_FILE = db.ROOT / "data" / "ultima-actualizacion.txt"
+LOCK_FILE = db.ROOT / "data" / "actualizando.lock"
+STALE = 20 * 3600       # opening Pleno catches up if the last update is older than this
+LOCK_MAX_AGE = 8 * 3600  # a lock older than this belongs to a run that died
 PUBLIC_URL = os.environ.get("PLENO_URL", "http://127.0.0.1:8780")
 AGENT = "mx.pleno.actualizar"
 AGENT_FILE = Path.home() / "Library" / "LaunchAgents" / f"{AGENT}.plist"
@@ -118,7 +122,54 @@ def pull_mananeras():
     return "actualizado" if proc.returncode == 0 else f"git pull falló: {proc.stderr.strip()[:200]}"
 
 
+def ultima():
+    """When the last update finished (epoch seconds), or None if it never ran."""
+    try:
+        return float(LAST_FILE.read_text().strip())
+    except (OSError, ValueError):
+        return LOG_FILE.stat().st_mtime if LOG_FILE.exists() else None
+
+
+def en_curso():
+    try:
+        return time.time() - LOCK_FILE.stat().st_mtime < LOCK_MAX_AGE
+    except OSError:
+        return False
+
+
+def pendiente(now=None):
+    """True when opening Pleno should pull what is new: old (or no) update, and none running."""
+    if os.environ.get("PLENO_SIN_ACTUALIZAR") == "1" or en_curso():
+        return False
+    last = ultima()
+    return last is None or (now or time.time()) - last > STALE
+
+
+def en_segundo_plano():
+    """Start `pleno actualizar` as a low-priority child; it stops when Pleno's window is closed and the
+    next opening resumes it (sources are cached, so the work already done is not repeated)."""
+    log = (db.ROOT / "data" / "actualizar.out.log").open("a", encoding="utf-8")
+    kw = {"creationflags": 0x4000} if sys.platform.startswith("win") else {"preexec_fn": lambda: os.nice(10)}
+    return subprocess.Popen([sys.executable, "-m", "pleno", "actualizar"], cwd=db.ROOT, stdout=log,
+                            stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, **kw)
+
+
 def actualizar(con=None, sources=None, notify=True):
+    """Pull what is new. Only one run at a time: the daily schedule and the catch-up on opening can overlap."""
+    if en_curso():
+        print("Ya hay una actualización en curso.")
+        return None
+    LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
+    LOCK_FILE.write_text(str(os.getpid()), encoding="utf-8")
+    try:
+        digest = _actualizar(con, sources, notify)
+        LAST_FILE.write_text(str(time.time()), encoding="utf-8")
+        return digest
+    finally:
+        LOCK_FILE.unlink(missing_ok=True)
+
+
+def _actualizar(con, sources, notify):
     started = time.time()
     con = con or db.connect()
     lines = [f"# Actualización {time.strftime('%Y-%m-%d %H:%M')}", ""]

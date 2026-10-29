@@ -31,7 +31,8 @@ Qué pasa después:
    - **Rápido** (recomendado): la base ya armada, ≈2 GB, en minutos.
    - **Desde las fuentes oficiales**: tu computadora descarga y procesa cada sitio oficial; tarda horas y puedes usar
      Pleno mientras avanza.
-4. Si lo eliges, **se actualiza cada día a las 7:00** con lo nuevo de las fuentes oficiales.
+4. Si lo eliges, **se actualiza cada día a las 7:00** con lo nuevo de las fuentes oficiales. Y cada vez que lo
+   abres, si la última actualización tiene más de 20 horas, se pone al día solo, en segundo plano.
 
 Para abrirlo otra vez: doble clic en **Pleno** en tu Escritorio. Para apagarlo: cierra la ventana negra que se abre
 junto. Para actualizar Pleno a la versión más nueva: vuelve a pegar la misma línea (tus datos se conservan).

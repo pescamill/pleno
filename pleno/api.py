@@ -256,6 +256,17 @@ def instalacion():
     return {"necesaria": instalador.needed(con()), "fuentes": instalador.FUENTES, "estado": instalador.status()}
 
 
+@app.get("/api/v1/actualizacion", dependencies=[light])
+def actualizacion():
+    """Whether new data is being pulled right now, and when the last update finished."""
+    from pleno import actualizar
+    if PUBLIC:
+        return {"en_curso": False, "ultima": None}
+    last = actualizar.ultima()
+    return {"en_curso": actualizar.en_curso(),
+            "ultima": time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(last)) if last else None}
+
+
 @app.post("/api/v1/instalacion", dependencies=[api])
 def instalar(body: InstallIn):
     from pleno import instalador

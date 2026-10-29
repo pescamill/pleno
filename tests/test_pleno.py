@@ -608,3 +608,35 @@ def test_quick_install_repairs_the_downloaded_database(tmp_path):
     con.commit(); con.close()
     instalador._repair(path)
     assert sqlite3.connect(path).execute("SELECT party FROM vote_casts").fetchone()[0] == "PRD"
+
+
+def test_catch_up_on_open(tmp_path, monkeypatch):
+    """Opening Pleno pulls what is new only when the last update is old and none is running."""
+    from pleno import actualizar
+    monkeypatch.setattr(actualizar, "LAST_FILE", tmp_path / "ultima.txt")
+    monkeypatch.setattr(actualizar, "LOG_FILE", tmp_path / "actualizaciones.log")
+    monkeypatch.setattr(actualizar, "LOCK_FILE", tmp_path / "actualizando.lock")
+    monkeypatch.delenv("PLENO_SIN_ACTUALIZAR", raising=False)
+    assert actualizar.pendiente()                      # never updated
+    actualizar.LAST_FILE.write_text(str(1000.0))
+    assert not actualizar.pendiente(now=1000 + actualizar.STALE - 1)
+    assert actualizar.pendiente(now=1000 + actualizar.STALE + 1)
+    actualizar.LOCK_FILE.write_text("1")               # the daily run is going: do not start another
+    assert actualizar.en_curso() and not actualizar.pendiente(now=10**12)
+    assert actualizar.actualizar() is None
+    actualizar.LOCK_FILE.unlink()
+    monkeypatch.setenv("PLENO_SIN_ACTUALIZAR", "1")
+    assert not actualizar.pendiente(now=10**12)
+
+
+def test_update_releases_its_lock_and_records_the_time(tmp_path, monkeypatch):
+    from pleno import actualizar
+    monkeypatch.setattr(actualizar, "LAST_FILE", tmp_path / "ultima.txt")
+    monkeypatch.setattr(actualizar, "LOCK_FILE", tmp_path / "actualizando.lock")
+    monkeypatch.setattr(actualizar, "_actualizar", lambda *a: "resumen.md")
+    assert actualizar.actualizar() == "resumen.md"
+    assert not actualizar.LOCK_FILE.exists() and actualizar.ultima() > 0
+    monkeypatch.setattr(actualizar, "_actualizar", lambda *a: 1 / 0)
+    with pytest.raises(ZeroDivisionError):
+        actualizar.actualizar()
+    assert not actualizar.LOCK_FILE.exists()

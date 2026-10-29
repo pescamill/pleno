@@ -21,6 +21,22 @@ BASE = "https://sitl.diputados.gob.mx/LXVI_leg/"
 GROUPS = {14: "MORENA", 3: "PAN", 5: "PVEM", 4: "PT", 1: "PRI", 6: "MC", 9: "IND"}
 # Every party id the vote summaries have used, including groups that no longer have a bench.
 SITE_PARTIES = {**GROUPS, 2: "PRD"}
+DAY = 24 * 3600
+
+
+def _get(path, cache, max_age=None, delay=0.5):
+    raw = fetch_cached(BASE + path, CACHE_DIR / NAME / cache, delay=delay, max_age=max_age)
+    return raw.decode("utf-8", "replace") if raw else ""
+
+
+def _text(fragment):
+    return re.sub(r"\s+", " ", htmllib.unescape(re.sub(r"<[^>]+>", " ", fragment))).strip()
+
+
+def _field(page, label):
+    """«<p>Entidad: <b> Michoacán </b>» → «Michoacán»."""
+    m = re.search(label + r"\s*:\s*<b>\s*([^<]+?)\s*</b>", page, re.I)
+    return htmllib.unescape(m.group(1)).strip() if m else None
 
 
 def summary_parties(summary, vid):

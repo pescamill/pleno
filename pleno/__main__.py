@@ -120,6 +120,12 @@ def abrir():
                 port = candidate
                 break
     first = instalador.needed(db.connect())
+    if not first:
+        from pleno import actualizar
+        if actualizar.pendiente():
+            # Off at the daily hour, or never scheduled: catch up now, in the background, while Pleno is used.
+            actualizar.en_segundo_plano()
+            print("  Bajando lo nuevo de las fuentes oficiales en segundo plano; puedes usar Pleno mientras.")
     url = f"http://127.0.0.1:{port}/" + ("#/instalar" if first else "")
     print("\n  Pleno está abierto en tu navegador:", url)
     print("  Deja esta ventana abierta mientras lo usas; ciérrala para apagar Pleno.\n")
